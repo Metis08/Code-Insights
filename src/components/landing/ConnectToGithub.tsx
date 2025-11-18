@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getReposForUser } from '@/actions/github';
@@ -16,6 +16,11 @@ type ConnectToGithubProps = {
 
 export function ConnectToGithub({ onReposFetched, onLoading, onError, isLoading }: ConnectToGithubProps) {
   const [username, setUsername] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleFetch = async () => {
     if (!username) {
@@ -31,6 +36,11 @@ export function ConnectToGithub({ onReposFetched, onLoading, onError, isLoading 
     }
     onLoading(false);
   };
+
+  if (!isClient) {
+    // Render a placeholder or nothing on the server to avoid hydration mismatch
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-4">
