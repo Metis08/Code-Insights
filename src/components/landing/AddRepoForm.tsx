@@ -36,7 +36,7 @@ export function AddRepoForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.repoUrl) {
-      router.push(`/analyze?repoUrl=${values.repoUrl}`);
+      router.push(`/analyze?repoUrl=${encodeURIComponent(values.repoUrl)}&analyze=true`);
     } else if (values.zipFile) {
       // Handle zip file upload logic here
       console.log('Zip file to upload:', values.zipFile);

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -28,14 +29,18 @@ type AnalysisResult = {
   summary: string;
 };
 
-export default function AnalyzePage() {
+function AnalyzePageComponent() {
+  const searchParams = useSearchParams();
+  const repoUrlFromQuery = searchParams.get('repoUrl');
+  const shouldAnalyze = searchParams.get('analyze');
+
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      repoUrl: '',
+      repoUrl: repoUrlFromQuery || '',
     },
   });
 
@@ -52,6 +57,15 @@ export default function AnalyzePage() {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (repoUrlFromQuery) {
+      form.setValue('repoUrl', repoUrlFromQuery);
+      if (shouldAnalyze === 'true') {
+        onSubmit({ repoUrl: repoUrlFromQuery });
+      }
+    }
+  }, [repoUrlFromQuery, shouldAnalyze, form]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -141,4 +155,12 @@ export default function AnalyzePage() {
       </main>
     </div>
   );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AnalyzePageComponent />
+    </Suspense>
+  )
 }
