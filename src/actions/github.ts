@@ -16,3 +16,17 @@ export async function getReposForUser(username: string) {
     return { error: 'An unexpected error occurred.' };
   }
 }
+
+export async function getRepoContents(repoFullName: string, path: string = '') {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repoFullName}/contents/${path}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { error: errorData.message || 'Failed to fetch repository contents.' };
+    }
+    const data = await response.json();
+    return { data };
+  } catch (error) {
+    return { error: 'An unexpected error occurred.' };
+  }
+}

@@ -1,4 +1,4 @@
-import { Code, HelpCircle } from 'lucide-react';
+import { Code, HelpCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -13,6 +13,12 @@ export default function Header() {
         <nav className="flex items-center gap-4">
            <Button variant="ghost" asChild>
             <Link href="/analyze">Analyze a Repo</Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/docs">
+              <FileText className="mr-2 h-4 w-4" />
+              Documentation
+            </Link>
           </Button>
           <Button asChild>
             <Link href="/qa">
