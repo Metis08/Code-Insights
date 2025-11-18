@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ConnectToGithub } from '@/components/landing/ConnectToGithub';
 import { GithubRepo, RepoList } from '@/components/landing/RepoList';
+import { AddRepoForm } from './AddRepoForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PlusCircle } from 'lucide-react';
 
 export default function Hero() {
   const [repos, setRepos] = useState<GithubRepo[]>([]);
@@ -74,8 +77,24 @@ export default function Hero() {
         
         {view === 'repos' && (
             <div className="w-full max-w-4xl">
-                <Button onClick={handleBack} variant="ghost" className="mb-4">← Back to search</Button>
-                <h2 className="text-3xl font-bold mb-4">Select a Repository</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <Button onClick={handleBack} variant="ghost">← Back to search</Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add External Repository
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add External Repository</DialogTitle>
+                      </DialogHeader>
+                      <AddRepoForm />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <h2 className="text-3xl font-bold mb-4 text-left">Select a Repository</h2>
                 <RepoList repos={repos} />
             </div>
         )}
