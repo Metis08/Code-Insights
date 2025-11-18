@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Hero() {
   return (
@@ -16,8 +17,8 @@ export default function Hero() {
           AI-powered code analysis using Gemini. Import a GitHub repo and instantly get architecture summaries, documentation, and insights.
         </p>
         <div className="mt-8">
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_0_20px_theme(colors.primary)] transition-shadow duration-300 hover:shadow-[0_0_30px_theme(colors.primary)]">
-            Analyze a Repo
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-[0_0_20px_theme(colors.primary)] transition-shadow duration-300 hover:shadow-[0_0_30px_theme(colors.primary)]">
+            <Link href="/analyze">Analyze a Repo</Link>
           </Button>
         </div>
       </div>

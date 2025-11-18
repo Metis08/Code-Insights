@@ -1,5 +1,6 @@
 import { Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Header() {
   return (
@@ -10,7 +11,9 @@ export default function Header() {
           <span className="font-bold text-lg">Code Insights</span>
         </a>
         <nav className="flex items-center gap-4">
-          <Button>Analyze a Repo</Button>
+          <Button asChild>
+            <Link href="/analyze">Analyze a Repo</Link>
+          </Button>
         </nav>
       </div>
     </header>
