@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ArrowLeft, Github, Sparkles, FileText, Network, Loader2, Folder, ChevronDown, ChevronRight, FileCode } from 'lucide-react';
+import { ArrowLeft, Github, Sparkles, FileText, Network, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateArchitectureSummary } from '@/ai/flows/generate-architecture-summary';
 import { getRepoContents } from '@/actions/github';
 import Header from '@/components/landing/Header';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 
 
 const formSchema = z.object({
@@ -34,51 +34,47 @@ type AnalysisResult = {
 
 type RepoFile = {
   name: string;
+
   path: string;
   type: 'file' | 'dir';
+  size: number; // size is required for Treemap
   children?: RepoFile[];
 };
 
-function FileTree({ files }: { files: RepoFile[] }) {
-  return (
-    <div className="space-y-2">
-      {files.map((file) => (
-        <FileNode key={file.path} node={file} />
-      ))}
-    </div>
-  );
-}
+const COLORS = ['#8889DD', '#9597E4', '#8DC77B', '#A5D297', '#E2CF45', '#F8C12D'];
 
-function FileNode({ node }: { node: RepoFile }) {
-  if (node.type === 'dir') {
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
     return (
-      <Collapsible>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full text-left hover:bg-muted/50 p-1 rounded-sm">
-          <ChevronRight className="w-4 h-4 transition-transform [&[data-state=open]]:rotate-90" />
-          <Folder className="w-4 h-4 text-primary" />
-          <span>{node.name}</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="pl-6 border-l border-border/50 ml-3 py-1">
-            {node.children && node.children.length > 0 ? (
-              <FileTree files={node.children} />
-            ) : (
-              <p className="text-muted-foreground italic text-sm">Empty directory</p>
-            )}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      <div className="bg-background/80 backdrop-blur-sm border border-border/50 p-2 rounded-md shadow-lg text-sm">
+        <p className="font-bold">{data.name}</p>
+        <p className="text-muted-foreground">{data.path}</p>
+        {data.type === 'file' && <p className="text-muted-foreground">Size: {data.size} bytes</p>}
+      </div>
     );
   }
+  return null;
+};
 
-  return (
-    <div className="flex items-center gap-2 p-1 ml-5">
-      <FileCode className="w-4 h-4 text-muted-foreground" />
-      <span>{node.name}</span>
-    </div>
-  );
+function FileTreemap({ data }: { data: RepoFile[] }) {
+    if (!data || data.length === 0) return null;
+  
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <Treemap
+          data={data}
+          dataKey="size"
+          ratio={4 / 3}
+          stroke="#1E1E1E"
+          fill="#8884d8"
+          isAnimationActive={true}
+        >
+           <Tooltip content={<CustomTooltip />} />
+        </Treemap>
+      </ResponsiveContainer>
+    );
 }
-
 
 function AnalyzePageComponent() {
   const searchParams = useSearchParams();
@@ -110,19 +106,21 @@ function AnalyzePageComponent() {
           name: file.name,
           path: file.path,
           type: file.type,
+          size: file.size || 0, // Default size to 0 for directories initially
         };
         if (node.type === 'dir') {
           node.children = await fetchFileTree(fullName, node.path);
+          // Aggregate size from children
+          node.size = node.children.reduce((acc, child) => acc + child.size, 1); // Add 1 to ensure dir has size
+        } else {
+          // For files, if size is 0, give it a small default to be visible
+          if (node.size === 0) node.size = 1;
         }
         return node;
       })
     );
 
-    return files.sort((a, b) => {
-      if (a.type === 'dir' && b.type === 'file') return -1;
-      if (a.type === 'file' && b.type === 'dir') return 1;
-      return a.name.localeCompare(b.name);
-    });
+    return files;
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -131,7 +129,7 @@ function AnalyzePageComponent() {
     setFileTree([]);
 
     const url = new URL(values.repoUrl);
-    const fullName = url.pathname.slice(1);
+    const fullName = url.pathname.slice(1).replace(/\/$/, '');;
     setRepoFullName(fullName);
 
     try {
@@ -164,7 +162,7 @@ function AnalyzePageComponent() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" />
             Back to Home
@@ -249,13 +247,11 @@ function AnalyzePageComponent() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="w-6 h-6 text-primary" />
-                    <span>File Structure</span>
+                    <span>File Structure Visualization</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-[60vh] overflow-y-auto pr-4">
-                        <FileTree files={fileTree} />
-                    </div>
+                    <FileTreemap data={fileTree} />
                 </CardContent>
               </Card>
           )}
