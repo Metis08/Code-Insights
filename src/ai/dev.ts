@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/generate-architecture-summary.ts';
+import '@/ai/flows/generate-file-by-file-documentation.ts';
