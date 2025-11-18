@@ -37,16 +37,18 @@ const prompt = ai.definePrompt({
   name: 'generateFileByFileDocumentationPrompt',
   input: {schema: GenerateFileByFileDocumentationInputSchema},
   output: {schema: GenerateFileByFileDocumentationOutputSchema},
-  prompt: `You are an AI expert at documenting code files.
-
-  Generate documentation for the following file, incorporating relevant code snippets to explain its purpose and functionality.
-
-  File Name: {{{fileName}}}
-  File Content:
-  ```
-  {{{fileContent}}}
-  ```
-  `,
+  prompt: [
+    'You are an AI expert at documenting code files.',
+    '',
+    'Generate documentation for the following file, incorporating relevant code snippets to explain its purpose and functionality.',
+    '',
+    'File Name: {{{fileName}}}',
+    'File Content:',
+    '```',
+    '{{{fileContent}}}',
+    '```',
+    '',
+  ].join('\n'),
 });
 
 const generateFileByFileDocumentationFlow = ai.defineFlow(
