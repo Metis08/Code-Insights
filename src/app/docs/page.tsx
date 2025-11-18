@@ -62,7 +62,11 @@ export default function DocsPage() {
         path: file.path,
         type: file.type,
         children: file.type === 'dir' ? [] : undefined,
-      }));
+      })).sort((a: RepoFile, b: RepoFile) => {
+        if (a.type === 'dir' && b.type === 'file') return -1;
+        if (a.type === 'file' && b.type === 'dir') return 1;
+        return a.name.localeCompare(b.name);
+      });
       setFiles(repoFiles);
     } else {
       setError(result.error || 'Could not fetch repository files.');
@@ -83,6 +87,7 @@ export default function DocsPage() {
   
   const fetchAndSetFileContent = async (file: RepoFile): Promise<string | null> => {
     if (!selectedRepo) return null;
+    if (file.content) return file.content;
     const res = await fetch(`https://api.github.com/repos/${selectedRepo.full_name}/contents/${file.path}`);
     const data = await res.json();
     if (data.content) {
@@ -111,7 +116,7 @@ export default function DocsPage() {
   }
 
   const handleGenerateDoc = async (file: RepoFile) => {
-    if (file.documentation) return; // Don't re-generate
+    if (file.documentation || file.isGenerating) return;
 
     updateFileState(file.path, { isGenerating: true });
 
@@ -125,8 +130,11 @@ export default function DocsPage() {
         fileName: file.name,
         fileContent: fileContent,
       });
+      
+      // Use a markdown-friendly format
+      const formattedDocumentation = result.documentation.replace(/```(\w*)\n/g, '<pre class="code-block"><code>').replace(/```/g, '</code></pre>').replace(/\n/g, '<br />');
 
-      updateFileState(file.path, { documentation: result.documentation, isGenerating: false });
+      updateFileState(file.path, { documentation: formattedDocumentation, isGenerating: false, content: fileContent });
 
     } catch (error) {
       console.error('Documentation generation failed:', error);
@@ -135,7 +143,7 @@ export default function DocsPage() {
   };
 
 
-  const FileTree = ({ fileList, level = 0 }: { fileList: RepoFile[], level?: number }) => (
+  const FileTree = ({ fileList }: { fileList: RepoFile[] }) => (
     <Accordion type="multiple" className="w-full">
       {fileList.map((file) => (
         <div key={file.path}>
@@ -149,14 +157,22 @@ export default function DocsPage() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="prose prose-sm prose-invert max-w-none text-muted-foreground p-4 bg-secondary rounded-b-md">
-                {file.documentation ? <div dangerouslySetInnerHTML={{ __html: file.documentation.replace(/\n/g, '<br />') }} /> : <p>Click to generate documentation...</p>}
+                {file.isGenerating && <p>Generating documentation...</p>}
+                {file.documentation ? <div dangerouslySetInnerHTML={{ __html: file.documentation }} /> : <p>Click to generate documentation...</p>}
               </AccordionContent>
             </AccordionItem>
           ) : (
-            // Basic directory rendering for now, can be expanded later
-            <div className="flex items-center gap-2 p-2 text-muted-foreground">
-              <Folder className="w-4 h-4"/> {file.name}
-            </div>
+            <AccordionItem value={file.path} className="border-b-0">
+               <AccordionTrigger>
+                <div className="flex items-center gap-2">
+                    <Folder className="w-4 h-4"/> {file.name}
+                </div>
+               </AccordionTrigger>
+               <AccordionContent>
+                 {/* Placeholder for fetching directory contents */}
+                 <div className="pl-4 text-muted-foreground italic">Directory support coming soon.</div>
+               </AccordionContent>
+            </AccordionItem>
           )}
         </div>
       ))}
