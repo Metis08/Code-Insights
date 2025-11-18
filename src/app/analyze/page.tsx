@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ArrowLeft, Github, Sparkles, FileText, Network, Loader2 } from 'lucide-react';
+import { ArrowLeft, Github, Sparkles, FileText, Network, Loader2, Folder, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,8 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateArchitectureSummary } from '@/ai/flows/generate-architecture-summary';
 import { getRepoContents } from '@/actions/github';
 import Header from '@/components/landing/Header';
-import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
-
 
 const formSchema = z.object({
   repoUrl: z.string().url({ message: 'Please enter a valid GitHub repository URL.' }),
@@ -34,47 +32,60 @@ type AnalysisResult = {
 
 type RepoFile = {
   name: string;
-
   path: string;
   type: 'file' | 'dir';
-  size: number; // size is required for Treemap
   children?: RepoFile[];
 };
 
-const COLORS = ['#8889DD', '#9597E4', '#8DC77B', '#A5D297', '#E2CF45', '#F8C12D'];
+const FileNode = ({ file }: { file: RepoFile }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const isDir = file.type === 'dir';
 
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-background/80 backdrop-blur-sm border border-border/50 p-2 rounded-md shadow-lg text-sm">
-        <p className="font-bold">{data.name}</p>
-        <p className="text-muted-foreground">{data.path}</p>
-        {data.type === 'file' && <p className="text-muted-foreground">Size: {data.size} bytes</p>}
+  return (
+    <div className="ml-4">
+      <div 
+        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 p-1 rounded-md"
+        onClick={() => isDir && setIsOpen(!isOpen)}
+      >
+        {isDir ? (
+          <Folder className="w-4 h-4 text-primary" />
+        ) : (
+          <File className="w-4 h-4 text-muted-foreground" />
+        )}
+        <span>{file.name}</span>
       </div>
-    );
-  }
-  return null;
+      {isDir && isOpen && file.children && (
+        <div className="pl-4 border-l border-border/50">
+          {file.children.sort((a,b) => {
+            if (a.type === 'dir' && b.type === 'file') return -1;
+            if (a.type === 'file' && b.type === 'dir') return 1;
+            return a.name.localeCompare(b.name);
+          }).map(child => (
+            <FileNode key={child.path} file={child} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
-function FileTreemap({ data }: { data: RepoFile[] }) {
-    if (!data || data.length === 0) return null;
-  
-    return (
-      <ResponsiveContainer width="100%" height={400}>
-        <Treemap
-          data={data}
-          dataKey="size"
-          ratio={4 / 3}
-          stroke="#1E1E1E"
-          fill="#8884d8"
-          isAnimationActive={true}
-        >
-           <Tooltip content={<CustomTooltip />} />
-        </Treemap>
-      </ResponsiveContainer>
-    );
+
+function FileTree({ data }: { data: RepoFile[] }) {
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="font-mono text-sm">
+       {data.sort((a,b) => {
+            if (a.type === 'dir' && b.type === 'file') return -1;
+            if (a.type === 'file' && b.type === 'dir') return 1;
+            return a.name.localeCompare(b.name);
+          }).map(file => (
+        <FileNode key={file.path} file={file} />
+      ))}
+    </div>
+  );
 }
+
 
 function AnalyzePageComponent() {
   const searchParams = useSearchParams();
@@ -106,15 +117,9 @@ function AnalyzePageComponent() {
           name: file.name,
           path: file.path,
           type: file.type,
-          size: file.size || 0, // Default size to 0 for directories initially
         };
         if (node.type === 'dir') {
           node.children = await fetchFileTree(fullName, node.path);
-          // Aggregate size from children
-          node.size = node.children.reduce((acc, child) => acc + child.size, 1); // Add 1 to ensure dir has size
-        } else {
-          // For files, if size is 0, give it a small default to be visible
-          if (node.size === 0) node.size = 1;
         }
         return node;
       })
@@ -247,11 +252,11 @@ function AnalyzePageComponent() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="w-6 h-6 text-primary" />
-                    <span>File Structure Visualization</span>
+                    <span>File Structure</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <FileTreemap data={fileTree} />
+                    <FileTree data={fileTree} />
                 </CardContent>
               </Card>
           )}
