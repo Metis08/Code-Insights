@@ -88,10 +88,9 @@ export default function DocsPage() {
   const fetchAndSetFileContent = async (file: RepoFile): Promise<string | null> => {
     if (!selectedRepo) return null;
     if (file.content) return file.content;
-    const res = await fetch(`https://api.github.com/repos/${selectedRepo.full_name}/contents/${file.path}`);
-    const data = await res.json();
-    if (data.content) {
-      const content = atob(data.content);
+    const result = await getRepoContents(selectedRepo.full_name, file.path);
+    if (result.data && result.data.content) {
+      const content = atob(result.data.content);
       // Not updating state here directly to avoid re-renders inside the generating function
       return content;
     }
@@ -131,10 +130,7 @@ export default function DocsPage() {
         fileContent: fileContent,
       });
       
-      // Use a markdown-friendly format
-      const formattedDocumentation = result.documentation.replace(/```(\w*)\n/g, '<pre class="code-block"><code>').replace(/```/g, '</code></pre>').replace(/\n/g, '<br />');
-
-      updateFileState(file.path, { documentation: formattedDocumentation, isGenerating: false, content: fileContent });
+      updateFileState(file.path, { documentation: result.documentation, isGenerating: false, content: fileContent });
 
     } catch (error) {
       console.error('Documentation generation failed:', error);
