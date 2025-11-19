@@ -20,6 +20,10 @@ export function ConnectToGithub({ onReposFetched, onLoading, onError, isLoading 
 
   useEffect(() => {
     setIsClient(true);
+    const savedUsername = localStorage.getItem('github_username');
+    if (savedUsername) {
+        setUsername(savedUsername);
+    }
   }, []);
 
   const handleFetch = async () => {
@@ -28,6 +32,7 @@ export function ConnectToGithub({ onReposFetched, onLoading, onError, isLoading 
       return;
     }
     onLoading(true);
+    localStorage.setItem('github_username', username);
     const result = await getReposForUser(username);
     if (result.error) {
       onError(result.error);
