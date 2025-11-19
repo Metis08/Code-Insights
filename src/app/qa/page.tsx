@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, Loader2, HelpCircle, Bot, User } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, HelpCircle, Bot, User, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -115,7 +115,7 @@ export default function QAPage() {
                  <div className="mt-4 text-neutral-400 text-center">or</div>
                  <div className="mt-4 text-center">
                   <Button asChild variant="outline">
-                    <Link href="/qa">Analyze a Repo by URL</Link>
+                    <Link href="/analyze">Analyze a Repo by URL</Link>
                   </Button>
                 </div>
               </div>
