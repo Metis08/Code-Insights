@@ -139,7 +139,7 @@ function QAPageComponent() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-3xl mx-auto">
-          {username && (
+          {username && view !== 'chat' && (
              <Link href={`/dashboard?username=${username}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
@@ -148,7 +148,7 @@ function QAPageComponent() {
           {view === 'initial' && (
             <>
                <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-black tracking-tighter">Repository Q&A</h1>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter">Repository Q&amp;A</h1>
                 <p className="mt-4 text-xl text-muted-foreground">
                   First, find a repository to ask questions about.
                 </p>
@@ -191,11 +191,17 @@ function QAPageComponent() {
 
           {view === 'chat' && selectedRepo && (
             <div>
+              {username && (
+                <Link href={`/dashboard?username=${username}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Dashboard
+                </Link>
+              )}
                <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                         <HelpCircle className="w-6 h-6 text-primary" />
-                        <span>Q&A for: <span className="font-mono bg-muted px-2 py-1 rounded">{selectedRepo.full_name}</span></span>
+                        <span>Q&amp;A for: <span className="font-mono bg-muted px-2 py-1 rounded">{selectedRepo.full_name}</span></span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

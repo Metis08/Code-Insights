@@ -227,7 +227,7 @@ function DocsPageComponent() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-4xl mx-auto">
-          {username && (
+          {username && view !== 'docs' && (
              <Link href={`/dashboard?username=${username}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
@@ -280,6 +280,12 @@ function DocsPageComponent() {
 
           {view === 'docs' && selectedRepo && (
             <div>
+              {username && (
+                <Link href={`/dashboard?username=${username}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Dashboard
+                </Link>
+              )}
                <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
