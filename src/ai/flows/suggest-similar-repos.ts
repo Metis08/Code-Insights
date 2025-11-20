@@ -94,6 +94,9 @@ const suggestSimilarReposFlow = ai.defineFlow(
     // Step 1: Extract keywords and search GitHub API
     const url = new URL(input.repoUrl);
     const pathParts = url.pathname.slice(1).split('/');
+    if (pathParts.length < 2) {
+      throw new Error("Invalid GitHub repository URL.");
+    }
     const repoName = pathParts[1] || '';
     const keywords = repoName.split(/[-_]/).join(' ');
     
@@ -118,6 +121,10 @@ const suggestSimilarReposFlow = ai.defineFlow(
       }))
     });
 
-    return output!;
+    if (!output) {
+      throw new Error("AI failed to generate suggestions.");
+    }
+    
+    return output;
   }
 );
