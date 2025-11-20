@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { suggestSimilarRepos } from '@/ai/flows/suggest-similar-repos';
 import Header from '@/components/landing/Header';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   repoUrl: z.string().url({ message: 'Please enter a valid GitHub repository URL.' }),
