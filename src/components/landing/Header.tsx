@@ -1,6 +1,6 @@
 'use client';
 
-import { Code, HelpCircle, FileText, Compass } from 'lucide-react';
+import { Code, HelpCircle, FileText, Compass, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,9 +10,9 @@ export default function Header() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/analyze', text: 'Analyze a Repo' },
+    { href: '/analyze', text: 'Analyze', icon: <Search className="mr-2 h-4 w-4" /> },
     { href: '/docs', text: 'Documentation', icon: <FileText className="mr-2 h-4 w-4" /> },
-    { href: '/qa', text: 'Repo Q&A', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
+    { href: '/qa', text: 'Q&A', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
     { href: '/suggest', text: 'Suggest Repos', icon: <Compass className="mr-2 h-4 w-4" /> },
   ];
 
@@ -27,7 +27,7 @@ export default function Header() {
           {navLinks.map((link) => (
             <Button
               key={link.href}
-              variant={pathname === link.href ? "secondary" : "ghost"}
+              variant={pathname.startsWith(link.href) ? "secondary" : "ghost"}
               asChild
               className="hidden md:flex"
             >

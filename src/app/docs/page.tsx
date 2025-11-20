@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, BookOpen, Loader2, FileCode, Folder, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { generateFileByFileDocumentation } from '@/ai/flows/generate-file-by-fil
 import { getRepoContents } from '@/actions/github';
 import Header from '@/components/landing/Header';
 import { ConnectToGithub } from '@/components/landing/ConnectToGithub';
-import { GithubRepo, RepoList } from '@/components/landing/RepoList';
+import { GithubRepo } from '@/components/landing/RepoList';
 
 type RepoFile = {
   name: string;
@@ -22,7 +23,10 @@ type RepoFile = {
   isGenerating?: boolean;
 };
 
-export default function DocsPage() {
+function DocsPageComponent() {
+  const searchParams = useSearchParams();
+  const repoUrlFromQuery = searchParams.get('repoUrl');
+
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [repos, setRepos] = useState<GithubRepo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +34,13 @@ export default function DocsPage() {
   const [view, setView] = useState<'initial' | 'repos' | 'docs'>('initial');
   const [files, setFiles] = useState<RepoFile[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
+
+  useEffect(() => {
+    if (repoUrlFromQuery) {
+      handleRepoUrl(repoUrlFromQuery);
+    }
+  }, [repoUrlFromQuery]);
+
 
   const handleReposFetched = (fetchedRepos: GithubRepo[]) => {
     setRepos(fetchedRepos);
@@ -50,6 +61,37 @@ export default function DocsPage() {
     setError(errorMessage);
     setLoading(false);
   };
+
+  const handleRepoUrl = async (url: string) => {
+    const urlParts = url.replace(/\/$/, "").split('/');
+    const repoName = urlParts.pop() || '';
+    const owner = urlParts.pop() || '';
+    if (!owner || !repoName) {
+      setError('Invalid GitHub URL');
+      return;
+    }
+    const fullName = `${owner}/${repoName}`;
+    
+    // Quick fetch to get basic repo info to display
+    const repoRes = await fetch(`https://api.github.com/repos/${fullName}`);
+    if(!repoRes.ok) {
+        setError("Could not fetch repository details from GitHub.");
+        return;
+    }
+    const repoData = await repoRes.json();
+    
+    await handleRepoSelected({
+      id: repoData.id,
+      name: repoData.name,
+      full_name: repoData.full_name,
+      description: repoData.description,
+      html_url: repoData.html_url,
+      stargazers_count: repoData.stargazers_count,
+      forks_count: repoData.forks_count,
+      language: repoData.language,
+      updated_at: repoData.updated_at,
+    });
+  }
 
   const handleRepoSelected = async (repo: GithubRepo) => {
     setSelectedRepo(repo);
@@ -81,7 +123,7 @@ export default function DocsPage() {
   }
 
   const handleBackToRepos = () => {
-    setView('repos');
+    setView(repos.length > 0 ? 'repos' : 'initial');
     setFiles([]);
   }
   
@@ -259,4 +301,12 @@ export default function DocsPage() {
       </main>
     </div>
   );
+}
+
+export default function DocsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DocsPageComponent />
+    </Suspense>
+  )
 }

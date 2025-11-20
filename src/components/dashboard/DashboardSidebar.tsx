@@ -2,17 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, Search, FileCode, FileText, MessageSquare } from 'lucide-react';
+import { Home, Package, Search, FileText, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
-  { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/dashboard/repositories', label: 'Repositories', icon: Package },
-  { href: '/dashboard/analysis', label: 'Analysis', icon: Search },
-  { href: '/dashboard/code-files', label: 'Code Files', icon: FileCode },
-  { href: '/dashboard/documentation', label: 'Documentation', icon: FileText },
-  { href: '/dashboard/qa', label: 'Q&A', icon: MessageSquare },
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/dashboard', label: 'Repositories', icon: Package },
+  { href: '/analyze', label: 'Analysis', icon: Search },
+  { href: '/docs', label: 'Documentation', icon: FileText },
+  { href: '/qa', label: 'Q&A', icon: MessageSquare },
 ];
 
 export function DashboardSidebar() {
@@ -26,7 +25,7 @@ export function DashboardSidebar() {
       </div>
       <nav className="flex flex-col gap-2">
         {navLinks.map((link) => {
-          const isActive = pathname.startsWith(link.href) && (link.href !== '/dashboard' || pathname === '/dashboard');
+          const isActive = pathname.startsWith(link.href) && (link.href !== '/' || pathname === '/') && (link.href !== '/dashboard' || pathname === '/dashboard');
           return(
           <Button
             key={link.href}
@@ -41,9 +40,6 @@ export function DashboardSidebar() {
           </Button>
         )})}
       </nav>
-      <div className="mt-auto">
-        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-bold">N</div>
-      </div>
     </aside>
   );
 }

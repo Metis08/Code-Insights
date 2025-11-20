@@ -10,8 +10,16 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { GithubRepo } from "@/components/landing/RepoList";
-import { Star } from "lucide-react";
+import { Star, MoreHorizontal, FileText, Search, MessageSquare } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export function RepoTable({ repos }: { repos: GithubRepo[] }) {
   return (
@@ -37,7 +45,36 @@ export function RepoTable({ repos }: { repos: GithubRepo[] }) {
                     {repo.stargazers_count}
                 </TableCell>
                 <TableCell>{timeAgo(repo.updated_at)}</TableCell>
-                <TableCell>...</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                       <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                       <DropdownMenuItem asChild>
+                        <Link href={`/analyze?repoUrl=${repo.html_url}&analyze=true`}>
+                          <Search className="mr-2 h-4 w-4"/>
+                          <span>Analyze</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                         <Link href={`/docs?repoUrl=${repo.html_url}`}>
+                          <FileText className="mr-2 h-4 w-4"/>
+                          <span>Documentation</span>
+                        </Link>
+                      </DropdownMenuItem>
+                       <DropdownMenuItem asChild>
+                         <Link href={`/qa?repoUrl=${repo.html_url}`}>
+                          <MessageSquare className="mr-2 h-4 w-4"/>
+                          <span>Q&A</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

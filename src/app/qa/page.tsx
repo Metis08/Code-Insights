@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, Loader2, HelpCircle, Bot, User, Compass } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { ArrowLeft, Sparkles, Loader2, HelpCircle, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { answerRepoQuestion } from '@/ai/flows/answer-repo-question';
 import Header from '@/components/landing/Header';
 import { ConnectToGithub } from '@/components/landing/ConnectToGithub';
-import { GithubRepo, RepoList } from '@/components/landing/RepoList';
+import { GithubRepo } from '@/components/landing/RepoList';
 
 type QAMessage = {
   role: 'user' | 'bot';
@@ -20,7 +21,10 @@ type QAResult = {
   answer: string;
 };
 
-export default function QAPage() {
+function QAPageComponent() {
+  const searchParams = useSearchParams();
+  const repoUrlFromQuery = searchParams.get('repoUrl');
+
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [repos, setRepos] = useState<GithubRepo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +34,42 @@ export default function QAPage() {
   const [messages, setMessages] = useState<QAMessage[]>([]);
   const [question, setQuestion] = useState('');
   const [isAnswering, setIsAnswering] = useState(false);
+
+  useEffect(() => {
+    if (repoUrlFromQuery) {
+      handleRepoUrl(repoUrlFromQuery);
+    }
+  }, [repoUrlFromQuery]);
+
+  const handleRepoUrl = async (url: string) => {
+    const urlParts = url.replace(/\/$/, "").split('/');
+    const repoName = urlParts.pop() || '';
+    const owner = urlParts.pop() || '';
+    if (!owner || !repoName) {
+      setError('Invalid GitHub URL');
+      return;
+    }
+    const fullName = `${owner}/${repoName}`;
+    
+    const repoRes = await fetch(`https://api.github.com/repos/${fullName}`);
+    if(!repoRes.ok) {
+        setError("Could not fetch repository details from GitHub.");
+        return;
+    }
+    const repoData = await repoRes.json();
+    
+    handleRepoSelected({
+      id: repoData.id,
+      name: repoData.name,
+      full_name: repoData.full_name,
+      description: repoData.description,
+      html_url: repoData.html_url,
+      stargazers_count: repoData.stargazers_count,
+      forks_count: repoData.forks_count,
+      language: repoData.language,
+      updated_at: repoData.updated_at,
+    });
+  }
 
   const handleReposFetched = (fetchedRepos: GithubRepo[]) => {
     setRepos(fetchedRepos);
@@ -63,7 +103,7 @@ export default function QAPage() {
   }
 
   const handleBackToRepos = () => {
-    setView('repos');
+    setView(repos.length > 0 ? 'repos' : 'initial');
     setMessages([]);
     setQuestion('');
   }
@@ -201,4 +241,13 @@ export default function QAPage() {
       </main>
     </div>
   );
+}
+
+
+export default function QAPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <QAPageComponent />
+    </Suspense>
+  )
 }
