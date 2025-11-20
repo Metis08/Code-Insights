@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, GitFork, BookText } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { timeAgo } from "@/lib/utils";
 
 export type GithubRepo = {
   id: number;
@@ -16,32 +17,6 @@ export type GithubRepo = {
   language: string;
   updated_at: string;
 };
-
-function timeAgo(dateString: string) {
-    const date = new Date(dateString);
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) {
-      return Math.floor(interval) + " years ago";
-    }
-    interval = seconds / 2592000;
-    if (interval > 1) {
-      return Math.floor(interval) + " months ago";
-    }
-    interval = seconds / 86400;
-    if (interval > 1) {
-      return Math.floor(interval) + " days ago";
-    }
-    interval = seconds / 3600;
-    if (interval > 1) {
-      return Math.floor(interval) + " hours ago";
-    }
-    interval = seconds / 60;
-    if (interval > 1) {
-      return Math.floor(interval) + " minutes ago";
-    }
-    return Math.floor(seconds) + " seconds ago";
-  }
 
 export function RepoList({ repos }: { repos: GithubRepo[] }) {
   return (

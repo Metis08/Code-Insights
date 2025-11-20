@@ -8,7 +8,7 @@ import { Loader2, Github } from 'lucide-react';
 import { GithubRepo } from './RepoList';
 
 type ConnectToGithubProps = {
-  onReposFetched: (repos: GithubRepo[]) => void;
+  onReposFetched: (repos: GithubRepo[], username: string) => void;
   onLoading: (loading: boolean) => void;
   onError: (error: string) => void;
   isLoading: boolean;
@@ -37,7 +37,7 @@ export function ConnectToGithub({ onReposFetched, onLoading, onError, isLoading 
     if (result.error) {
       onError(result.error);
     } else if (result.data) {
-      onReposFetched(result.data);
+      onReposFetched(result.data, username);
     }
     onLoading(false);
   };
