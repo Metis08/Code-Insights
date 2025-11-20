@@ -91,6 +91,7 @@ function AnalyzePageComponent() {
   const searchParams = useSearchParams();
   const repoUrlFromQuery = searchParams.get('repoUrl');
   const shouldAnalyze = searchParams.get('analyze');
+  const username = searchParams.get('username');
 
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [fileTree, setFileTree] = useState<RepoFile[]>([]);
@@ -133,24 +134,24 @@ function AnalyzePageComponent() {
     setAnalysisResult(null);
     setFileTree([]);
 
-    const url = new URL(values.repoUrl);
-    const fullName = url.pathname.slice(1).replace(/\/$/, '');;
-    setRepoFullName(fullName);
-
     try {
-      const summaryPromise = generateArchitectureSummary({ repoUrl: values.repoUrl });
-      const fileTreePromise = fetchFileTree(fullName);
+        const url = new URL(values.repoUrl);
+        const fullName = url.pathname.slice(1).replace(/\/$/, '');;
+        setRepoFullName(fullName);
 
-      const [summaryResult, files] = await Promise.all([summaryPromise, fileTreePromise]);
-      
-      setAnalysisResult(summaryResult);
-      setFileTree(files);
+        const summaryPromise = generateArchitectureSummary({ repoUrl: values.repoUrl });
+        const fileTreePromise = fetchFileTree(fullName);
+
+        const [summaryResult, files] = await Promise.all([summaryPromise, fileTreePromise]);
+        
+        setAnalysisResult(summaryResult);
+        setFileTree(files);
 
     } catch (error) {
-      console.error('Analysis failed:', error);
-      // You could show a toast notification here
+        console.error('Analysis failed:', error);
+        // You could show a toast notification here
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   }
 
@@ -161,16 +162,16 @@ function AnalyzePageComponent() {
         onSubmit({ repoUrl: repoUrlFromQuery });
       }
     }
-  }, [repoUrlFromQuery, shouldAnalyze, form]);
+  }, [repoUrlFromQuery, shouldAnalyze]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-4xl mx-auto">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <Link href={username ? `/dashboard?username=${username}` : "/dashboard"} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Back to Dashboard
           </Link>
 
           <div className="text-center mb-12">
