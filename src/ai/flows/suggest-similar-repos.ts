@@ -9,6 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { searchRepositories } from '@/actions/github';
 
 const RepoSuggestionSchema = z.object({
   name: z.string().describe('The full name of the repository in "owner/repo" format.'),
@@ -31,6 +32,15 @@ export type SuggestSimilarReposOutput = z.infer<
   typeof SuggestSimilarReposOutputSchema
 >;
 
+const FlowInputSchema = z.object({
+  sourceRepoUrl: z.string().url(),
+  candidateRepos: z.array(z.object({
+    name: z.string(),
+    description: z.string().nullable(),
+    html_url: z.string().url(),
+  })),
+});
+
 export async function suggestSimilarRepos(
   input: SuggestSimilarReposInput
 ): Promise<SuggestSimilarReposOutput> {
@@ -39,27 +49,23 @@ export async function suggestSimilarRepos(
 
 const prompt = ai.definePrompt({
   name: 'suggestSimilarReposPrompt',
-  input: { schema: SuggestSimilarReposInputSchema },
+  input: { schema: FlowInputSchema },
   output: { schema: SuggestSimilarReposOutputSchema },
   prompt: `You are an expert GitHub repository recommender.
-Your job is to analyze the given GitHub repo URL and return ONLY repositories that are genuinely similar.
+Your job is to analyze the given source GitHub repo URL and a list of candidate repositories, then return ONLY the candidates that are genuinely similar.
 
 Follow these rules strictly:
 
-1. First, extract the core keywords from:
-   - Repository name
-   - Description
-   - README content (if provided)
-   - Tech stack (languages, frameworks)
-   - Problem the repo solves
+1. Analyze the source repository to understand its core purpose, technology, and what problem it solves.
+   Source Repository: {{{sourceRepoUrl}}}
 
-2. Understand the main purpose of the repo. Examples:
-   - Is it a web app?
-   - Is it an API?
-   - Is it ML/AI?
-   - Is it a portfolio?
-   - Is it a game engine?
-   - Is it a Firebase project?
+2. From the following list of candidate repositories, select the ones that are the most similar to the source repository.
+   Candidate Repositories:
+   {{#each candidateRepos}}
+   - Name: {{name}}
+     URL: {{html_url}}
+     Description: {{description}}
+   {{/each}}
 
 3. Recommend ONLY GitHub repositories that match:
    - SAME purpose
@@ -68,16 +74,13 @@ Follow these rules strictly:
    - SAME problem or similar functionality
 
 4. DO NOT recommend:
-   - Random popular repos
-   - Unrelated topics
-   - Repos from different domains
-   - Repos with mismatched tech stacks
+   - Repositories that are not in the candidate list.
+   - Unrelated topics or mismatched tech stacks.
 
-5. Recommend 5–7 repos max.
-6. Only output VALID GitHub repo links.
-7. No explanation outside JSON.
-
-Now analyze this repository: {{{repoUrl}}}
+5. Provide a concise reason for each recommendation.
+6. Recommend 5-7 repos max from the candidate list.
+7. Only output VALID GitHub repo links.
+8. No explanation outside the required JSON format.
   `,
 });
 
@@ -88,7 +91,33 @@ const suggestSimilarReposFlow = ai.defineFlow(
     outputSchema: SuggestSimilarReposOutputSchema,
   },
   async input => {
-    const { output } = await prompt(input);
+    // Step 1: Extract keywords and search GitHub API
+    const url = new URL(input.repoUrl);
+    const pathParts = url.pathname.slice(1).split('/');
+    const repoName = pathParts[1] || '';
+    const keywords = repoName.split(/[-_]/).join(' ');
+    
+    const searchResult = await searchRepositories(keywords + ' in:name,description,topics');
+
+    if (searchResult.error || !searchResult.data) {
+      console.error("GitHub search failed:", searchResult.error);
+      throw new Error("Could not search for repositories on GitHub.");
+    }
+    
+    // Filter out the source repo itself from candidates
+    const sourceFullName = `${pathParts[0]}/${pathParts[1]}`;
+    const candidates = searchResult.data.filter((repo: any) => repo.full_name !== sourceFullName);
+
+    // Step 2: Send candidates to Gemini for ranking and filtering
+    const { output } = await prompt({
+      sourceRepoUrl: input.repoUrl,
+      candidateRepos: candidates.map((repo: any) => ({
+        name: repo.full_name,
+        description: repo.description,
+        html_url: repo.html_url
+      }))
+    });
+
     return output!;
   }
 );
