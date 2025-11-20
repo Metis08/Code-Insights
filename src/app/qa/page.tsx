@@ -24,6 +24,7 @@ type QAResult = {
 function QAPageComponent() {
   const searchParams = useSearchParams();
   const repoUrlFromQuery = searchParams.get('repoUrl');
+  const username = searchParams.get('username');
 
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [repos, setRepos] = useState<GithubRepo[]>([]);
@@ -136,6 +137,12 @@ function QAPageComponent() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-3xl mx-auto">
+          {view !== 'initial' && (
+             <Link href={username ? `/dashboard?username=${username}` : "/dashboard"} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+            </Link>
+          )}
           {view === 'initial' && (
             <>
                <div className="text-center mb-12">
@@ -164,9 +171,6 @@ function QAPageComponent() {
 
           {view === 'repos' && (
             <div>
-               <Button onClick={handleBackToSearch} variant="ghost" className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to search
-              </Button>
               <h2 className="text-3xl font-bold mb-4 text-left">Select a Repository to Chat With</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-1">
                 {repos.map((repo) => (
@@ -185,9 +189,6 @@ function QAPageComponent() {
 
           {view === 'chat' && selectedRepo && (
             <div>
-              <Button onClick={handleBackToRepos} variant="ghost" className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Change Repository
-              </Button>
                <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
