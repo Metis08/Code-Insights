@@ -35,12 +35,10 @@ type Suggestion = {
 };
 
 async function getRepoDetails(fullName: string): Promise<RepoDetails | null> {
-    // We can't get a repo by full name directly, so we fetch the user/org and find the repo.
-    // This is a workaround. A dedicated `getRepoDetails` action would be better.
     try {
         const response = await fetch(`https://api.github.com/repos/${fullName}`);
         if (!response.ok) {
-            console.error(`Failed to fetch repo details for ${fullName}`);
+            // Silently fail if repo is not found (e.g. 404 error)
             return null;
         }
         const data = await response.json();
