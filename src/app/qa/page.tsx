@@ -39,8 +39,10 @@ function QAPageComponent() {
   useEffect(() => {
     if (repoUrlFromQuery) {
       handleRepoUrl(repoUrlFromQuery);
+    } else if (username) {
+      setView('initial');
     }
-  }, [repoUrlFromQuery]);
+  }, [repoUrlFromQuery, username]);
 
   const handleRepoUrl = async (url: string) => {
     const urlParts = url.replace(/\/$/, "").split('/');
@@ -137,8 +139,8 @@ function QAPageComponent() {
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-3xl mx-auto">
-          {view !== 'initial' && (
-             <Link href={username ? `/dashboard?username=${username}` : "/dashboard"} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          {username && (
+             <Link href={`/dashboard?username=${username}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
             </Link>
