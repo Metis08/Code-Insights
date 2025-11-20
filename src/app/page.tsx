@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +8,11 @@ import { ConnectToGithub } from '@/components/landing/ConnectToGithub';
 import { GithubRepo } from '@/components/landing/RepoList';
 import Header from '@/components/landing/Header';
 import { useRouter } from 'next/navigation';
+import Problem from '@/components/landing/Problem';
+import Features from '@/components/landing/Features';
+import HowItWorks from '@/components/landing/HowItWorks';
+import TechStack from '@/components/landing/TechStack';
+import Footer from '@/components/landing/Footer';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -66,7 +72,12 @@ export default function Home() {
                     </div>
                 </div>
             </section>
+            <Problem />
+            <Features />
+            <HowItWorks />
+            <TechStack />
        </main>
+       <Footer />
     </div>
   );
 }
