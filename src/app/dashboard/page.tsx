@@ -43,7 +43,7 @@ function DashboardContent() {
                     <p className="text-muted-foreground">A list of your repositories being analyzed by Code Insights.</p>
                 </div>
                 <Button asChild>
-                    <Link href={username ? `/analyze?username=${username}` : '/analyze'}>Add Repository</Link>
+                    <Link href={username ? `/analyze?username=${username}` : '/analyze'}>Add External Repository</Link>
                 </Button>
             </div>
             {loading ? (
