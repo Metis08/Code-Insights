@@ -77,8 +77,8 @@ export default function SuggestPage() {
       const result = await suggestSimilarRepos({ repoUrl: values.repoUrl });
       
       const detailedSuggestions = await Promise.all(
-        result.suggestions.map(async (suggestion) => {
-          const details = await getRepoDetails(suggestion.fullName);
+        result.similar_repositories.map(async (suggestion) => {
+          const details = await getRepoDetails(suggestion.name);
           return { details, reason: suggestion.reason };
         })
       );

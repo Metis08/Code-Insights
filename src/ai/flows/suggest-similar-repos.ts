@@ -11,8 +11,9 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const RepoSuggestionSchema = z.object({
-  fullName: z.string().describe('The full name of the repository in "owner/repo" format.'),
-  reason: z.string().describe('A brief explanation of why this repository is a good suggestion.'),
+  name: z.string().describe('The full name of the repository in "owner/repo" format.'),
+  url: z.string().url().describe('The full URL of the repository.'),
+  reason: z.string().describe('Why this repo is a similar and relevant suggestion.'),
 });
 
 const SuggestSimilarReposInputSchema = z.object({
@@ -23,7 +24,8 @@ export type SuggestSimilarReposInput = z.infer<
 >;
 
 const SuggestSimilarReposOutputSchema = z.object({
-  suggestions: z.array(RepoSuggestionSchema).describe('A list of suggested similar repositories.'),
+  keywords: z.array(z.string()).describe('A list of core keywords extracted from the source repository.'),
+  similar_repositories: z.array(RepoSuggestionSchema).describe('A list of suggested similar repositories.'),
 });
 export type SuggestSimilarReposOutput = z.infer<
   typeof SuggestSimilarReposOutputSchema
@@ -39,12 +41,43 @@ const prompt = ai.definePrompt({
   name: 'suggestSimilarReposPrompt',
   input: { schema: SuggestSimilarReposInputSchema },
   output: { schema: SuggestSimilarReposOutputSchema },
-  prompt: `You are a world-class expert in software development and open-source projects.
-    Your task is to suggest repositories with similar names to a given GitHub repository URL.
-    Extract the keywords from the repository name in the URL. For example, if the URL is 'https://github.com/user/CPU-Scheduling-Algorithms', you should search for repositories related to 'CPU Scheduling Algorithms'.
-    Provide a list of 5 relevant suggestions. For each suggestion, provide the full name ("owner/repo") and a concise reason for the recommendation.
+  prompt: `You are an expert GitHub repository recommender.
+Your job is to analyze the given GitHub repo URL and return ONLY repositories that are genuinely similar.
 
-    Repository URL: {{{repoUrl}}}
+Follow these rules strictly:
+
+1. First, extract the core keywords from:
+   - Repository name
+   - Description
+   - README content (if provided)
+   - Tech stack (languages, frameworks)
+   - Problem the repo solves
+
+2. Understand the main purpose of the repo. Examples:
+   - Is it a web app?
+   - Is it an API?
+   - Is it ML/AI?
+   - Is it a portfolio?
+   - Is it a game engine?
+   - Is it a Firebase project?
+
+3. Recommend ONLY GitHub repositories that match:
+   - SAME purpose
+   - SAME category
+   - SAME tech stack or closely related stack
+   - SAME problem or similar functionality
+
+4. DO NOT recommend:
+   - Random popular repos
+   - Unrelated topics
+   - Repos from different domains
+   - Repos with mismatched tech stacks
+
+5. Recommend 5–7 repos max.
+6. Only output VALID GitHub repo links.
+7. No explanation outside JSON.
+
+Now analyze this repository: {{{repoUrl}}}
   `,
 });
 
