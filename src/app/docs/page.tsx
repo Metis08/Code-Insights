@@ -316,7 +316,7 @@ function DocsPageComponent() {
 
 export default function DocsPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <DocsPageComponent />
     </Suspense>
   )

@@ -270,7 +270,7 @@ function AnalyzePageComponent() {
 
 export default function AnalyzePage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <AnalyzePageComponent />
     </Suspense>
   )

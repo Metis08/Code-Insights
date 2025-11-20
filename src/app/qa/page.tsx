@@ -255,7 +255,7 @@ function QAPageComponent() {
 
 export default function QAPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <QAPageComponent />
     </Suspense>
   )
