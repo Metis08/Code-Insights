@@ -40,8 +40,8 @@ const prompt = ai.definePrompt({
   input: { schema: SuggestSimilarReposInputSchema },
   output: { schema: SuggestSimilarReposOutputSchema },
   prompt: `You are a world-class expert in software development and open-source projects.
-    Your task is to suggest similar or alternative repositories to a given GitHub repository.
-    Analyze the functionality, language, and purpose of the repository at the given URL.
+    Your task is to suggest repositories with similar names to a given GitHub repository URL.
+    Extract the keywords from the repository name in the URL. For example, if the URL is 'https://github.com/user/CPU-Scheduling-Algorithms', you should search for repositories related to 'CPU Scheduling Algorithms'.
     Provide a list of 5 relevant suggestions. For each suggestion, provide the full name ("owner/repo") and a concise reason for the recommendation.
 
     Repository URL: {{{repoUrl}}}
