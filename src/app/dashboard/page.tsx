@@ -11,7 +11,6 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AddRepoForm } from '@/components/landing/AddRepoForm';
-import { getRepoDetails } from '@/actions/github';
 
 function DashboardContent() {
     const searchParams = useSearchParams();
@@ -51,17 +50,10 @@ function DashboardContent() {
             }
 
             const fullName = `${owner}/${repo}`;
-            const result = await getRepoDetails(fullName, ''); // getRepoContents can get details
-
-             if (result.error || !result.data) {
-                setError(`Failed to fetch repository: ${result.error}`);
-                return;
-            }
-
+            
             // The data from getRepoContents is an array of files, not repo details.
-            // We need to fetch repo details specifically. Let's assume an action for that.
-            // For now, I'll create a synthetic repo object.
-             const repoRes = await fetch(`https://api.github.com/repos/${fullName}`);
+            // We need to fetch repo details specifically.
+            const repoRes = await fetch(`https://api.github.com/repos/${fullName}`);
             if(!repoRes.ok) {
                 setError("Could not fetch repository details from GitHub.");
                 return;
