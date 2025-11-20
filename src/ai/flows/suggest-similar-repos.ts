@@ -32,6 +32,16 @@ export type SuggestSimilarReposOutput = z.infer<
   typeof SuggestSimilarReposOutputSchema
 >;
 
+const KeywordExtractionInputSchema = z.object({
+  repoUrl: z.string().url(),
+  repoName: z.string(),
+  repoDescription: z.string().optional(),
+});
+
+const KeywordExtractionOutputSchema = z.object({
+  keywords: z.array(z.string()).describe('A list of 3-5 core technical keywords that best describe the repository.'),
+});
+
 const FlowInputSchema = z.object({
   sourceRepoUrl: z.string().url(),
   candidateRepos: z.array(z.object({
@@ -47,7 +57,29 @@ export async function suggestSimilarRepos(
   return suggestSimilarReposFlow(input);
 }
 
-const prompt = ai.definePrompt({
+
+const keywordPrompt = ai.definePrompt({
+  name: 'extractKeywordsForSearchPrompt',
+  input: { schema: KeywordExtractionInputSchema },
+  output: { schema: KeywordExtractionOutputSchema },
+  prompt: `You are an expert at analyzing software repositories.
+  Your task is to extract the most relevant technical keywords from the provided repository information.
+  These keywords will be used to search for similar repositories on GitHub.
+
+  Focus on:
+  - The core technology (e.g., "react", "nextjs", "firebase")
+  - The problem domain (e.g., "code-analysis", "ai-chatbot", "data-visualization")
+  - Key features or libraries (e.g., "genkit", "shadcn-ui")
+
+  Repository Name: {{{repoName}}}
+  Repository URL: {{{repoUrl}}}
+  Description: {{{repoDescription}}}
+
+  Extract 3-5 of the most important keywords.
+  `,
+});
+
+const mainPrompt = ai.definePrompt({
   name: 'suggestSimilarReposPrompt',
   input: { schema: FlowInputSchema },
   output: { schema: SuggestSimilarReposOutputSchema },
@@ -91,16 +123,27 @@ const suggestSimilarReposFlow = ai.defineFlow(
     outputSchema: SuggestSimilarReposOutputSchema,
   },
   async input => {
-    // Step 1: Extract keywords and search GitHub API
+    // Step 1: Extract keywords from the repo URL/name
     const url = new URL(input.repoUrl);
     const pathParts = url.pathname.slice(1).split('/');
     if (pathParts.length < 2) {
       throw new Error("Invalid GitHub repository URL.");
     }
+    const owner = pathParts[0] || '';
     const repoName = pathParts[1] || '';
-    const keywords = repoName.split(/[-_]/).join(' ');
+    const sourceFullName = `${owner}/${repoName}`;
+
+    const { output: keywordOutput } = await keywordPrompt({
+      repoUrl: input.repoUrl,
+      repoName: repoName,
+    });
+    if (!keywordOutput?.keywords || keywordOutput.keywords.length === 0) {
+        throw new Error("AI failed to extract keywords for search.");
+    }
+    const searchString = keywordOutput.keywords.join(' ') + ' in:name,description,topics';
     
-    const searchResult = await searchRepositories(keywords + ' in:name,description,topics');
+    // Step 2: Use keywords to search GitHub API for candidates
+    const searchResult = await searchRepositories(searchString);
 
     if (searchResult.error || !searchResult.data) {
       console.error("GitHub search failed:", searchResult.error);
@@ -108,11 +151,14 @@ const suggestSimilarReposFlow = ai.defineFlow(
     }
     
     // Filter out the source repo itself from candidates
-    const sourceFullName = `${pathParts[0]}/${pathParts[1]}`;
     const candidates = searchResult.data.filter((repo: any) => repo.full_name !== sourceFullName);
 
-    // Step 2: Send candidates to Gemini for ranking and filtering
-    const { output } = await prompt({
+    if (candidates.length === 0) {
+      return { keywords: keywordOutput.keywords, similar_repositories: [] };
+    }
+
+    // Step 3: Send candidates to Gemini for ranking and filtering
+    const { output } = await mainPrompt({
       sourceRepoUrl: input.repoUrl,
       candidateRepos: candidates.map((repo: any) => ({
         name: repo.full_name,
