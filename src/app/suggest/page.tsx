@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { suggestSimilarRepos } from '@/ai/flows/suggest-similar-repos';
 import Header from '@/components/landing/Header';
-import { getRepoContents } from '@/actions/github'; // Using getRepoContents to get repo details
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   repoUrl: z.string().url({ message: 'Please enter a valid GitHub repository URL.' }),
@@ -61,6 +61,7 @@ async function getRepoDetails(fullName: string): Promise<RepoDetails | null> {
 export default function SuggestPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -92,6 +93,11 @@ export default function SuggestPage() {
 
     } catch (error) {
       console.error('Suggestion generation failed:', error);
+      toast({
+        variant: "destructive",
+        title: "AI Service Unavailable",
+        description: "The AI model is currently overloaded. Please try again in a few moments.",
+      })
     } finally {
       setIsLoading(false);
     }
