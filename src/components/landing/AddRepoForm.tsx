@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link, UploadCloud } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const formSchema = z.object({
   repoUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
@@ -25,8 +26,14 @@ const formSchema = z.object({
   path: ['repoUrl'],
 });
 
-export function AddRepoForm() {
+type AddRepoFormProps = {
+    onRepoAdded?: (repoUrl: string) => void;
+};
+
+export function AddRepoForm({ onRepoAdded }: AddRepoFormProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,15 +41,21 @@ export function AddRepoForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     if (values.repoUrl) {
-      router.push(`/analyze?repoUrl=${encodeURIComponent(values.repoUrl)}&analyze=true`);
+      if (onRepoAdded) {
+        await onRepoAdded(values.repoUrl);
+      } else {
+        router.push(`/analyze?repoUrl=${encodeURIComponent(values.repoUrl)}&analyze=true`);
+      }
     } else if (values.zipFile) {
       // Handle zip file upload logic here
       console.log('Zip file to upload:', values.zipFile);
       // For now, we'll just log it. A real implementation would
       // upload the file and then redirect to the analysis page.
     }
+    setIsLoading(false);
   }
 
   return (
@@ -87,7 +100,9 @@ export function AddRepoForm() {
                 )}
               />
           </TabsContent>
-          <Button type="submit" className="w-full">Analyze Repository</Button>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Analyzing...' : 'Analyze Repository'}
+          </Button>
         </form>
       </Form>
     </Tabs>
