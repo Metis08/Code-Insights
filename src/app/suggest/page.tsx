@@ -77,6 +77,15 @@ export default function SuggestPage() {
     try {
       const result = await suggestSimilarRepos({ repoUrl: values.repoUrl });
       
+      if (result.similar_repositories.length === 0 && result.keywords.length > 0) {
+        toast({
+          title: "No similar repositories found",
+          description: `We couldn't find any repositories matching the keywords: ${result.keywords.join(", ")}`,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       const detailedSuggestions = await Promise.all(
         result.similar_repositories.map(async (suggestion) => {
           const details = await getRepoDetails(suggestion.name);
