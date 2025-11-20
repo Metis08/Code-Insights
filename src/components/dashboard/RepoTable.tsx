@@ -21,7 +21,12 @@ import {
 import { Button } from "../ui/button";
 import Link from "next/link";
 
-export function RepoTable({ repos }: { repos: GithubRepo[] }) {
+export function RepoTable({ repos, username }: { repos: GithubRepo[], username: string | null }) {
+  const getLink = (base: string, repoUrl: string) => {
+    const url = `${base}?repoUrl=${repoUrl}&analyze=true`;
+    return username ? `${url}&username=${username}` : url;
+  }
+
   return (
     <Card className="bg-card/50 border-border/50">
       <CardContent className="p-0">
@@ -55,19 +60,19 @@ export function RepoTable({ repos }: { repos: GithubRepo[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                        <DropdownMenuItem asChild>
-                        <Link href={`/analyze?repoUrl=${repo.html_url}&analyze=true`}>
+                        <Link href={getLink('/analyze', repo.html_url)}>
                           <Search className="mr-2 h-4 w-4"/>
                           <span>Analyze</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                         <Link href={`/docs?repoUrl=${repo.html_url}`}>
+                         <Link href={getLink('/docs', repo.html_url)}>
                           <FileText className="mr-2 h-4 w-4"/>
                           <span>Documentation</span>
                         </Link>
                       </DropdownMenuItem>
                        <DropdownMenuItem asChild>
-                         <Link href={`/qa?repoUrl=${repo.html_url}`}>
+                         <Link href={getLink('/qa', repo.html_url)}>
                           <MessageSquare className="mr-2 h-4 w-4"/>
                           <span>Q&A</span>
                         </Link>

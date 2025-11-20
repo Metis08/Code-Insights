@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { getReposForUser } from '@/actions/github';
 import { GithubRepo } from '@/components/landing/RepoList';
@@ -30,7 +31,7 @@ function DashboardContent() {
                 .finally(() => setLoading(false));
         } else {
             setLoading(false);
-            setError("No username provided.");
+            setError("No username found in URL. Please go back and enter a username.");
         }
     }, [username]);
 
@@ -41,8 +42,8 @@ function DashboardContent() {
                     <h2 className="text-3xl font-bold">Repositories</h2>
                     <p className="text-muted-foreground">A list of your repositories being analyzed by Code Insights.</p>
                 </div>
-                <Button>
-                    Add Repository
+                <Button asChild>
+                    <Link href={username ? `/analyze?username=${username}` : '/analyze'}>Add Repository</Link>
                 </Button>
             </div>
             {loading ? (
@@ -52,7 +53,7 @@ function DashboardContent() {
             ) : error ? (
                 <div className="text-destructive">{error}</div>
             ) : (
-                <RepoTable repos={repos} />
+                <RepoTable repos={repos} username={username} />
             )}
         </DashboardLayout>
     );
