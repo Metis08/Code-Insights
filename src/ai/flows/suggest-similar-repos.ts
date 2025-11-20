@@ -36,7 +36,7 @@ const FlowInputSchema = z.object({
   sourceRepoUrl: z.string().url(),
   candidateRepos: z.array(z.object({
     name: z.string(),
-    description: z.string().nullable(),
+    description: z.string(),
     html_url: z.string().url(),
   })),
 });
@@ -113,7 +113,7 @@ const suggestSimilarReposFlow = ai.defineFlow(
       sourceRepoUrl: input.repoUrl,
       candidateRepos: candidates.map((repo: any) => ({
         name: repo.full_name,
-        description: repo.description,
+        description: repo.description || '',
         html_url: repo.html_url
       }))
     });
